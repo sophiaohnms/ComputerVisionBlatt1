@@ -12,16 +12,18 @@ def pre_process_images(X: np.ndarray):
     """
     assert X.shape[1] == 784,\
         f"X.shape[1]: {X.shape[1]}, should be 784"
-    
+
     # normalize the entries
-    X/255
+    X = X/255
     
     # apply bias trick
     X_with_bias = np.zeros((X.shape[0], X.shape[1]+1))
     X_with_bias[:,:-1] = X
-    X_with_bias[:,-1] = 1  # can we just set it to 1 at the beginning
-    
-    return X_with_bias
+    X_with_bias[:,-1] = 1  # can we just set it to 1 at the beginning?
+
+    X = X_with_bias
+
+    return X
 
 
 def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
@@ -36,14 +38,15 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
 
     C = - (1/len(outputs)) * np.sum(targets * np.log(outputs) + (1 - targets) * np.log(1 - outputs))
+
     return C
 
 
 class BinaryModel:
 
-    def __init__(self, l2_reg_lambda: float):
+    def __init__(self, l2_reg_lambda: float, input_nodes: int):
         # Define number of input nodes
-        self.I = None
+        self.I = input_nodes
         self.w = np.zeros((self.I, 1))
         self.grad = None
 
@@ -58,8 +61,8 @@ class BinaryModel:
             y: output of model with shape [batch size, 1]
         """
         z = X.dot(self.w)
-        y = sigmoid(z)
-        
+        y = 1/(1 + np.exp(-z))
+
         return y
 
     def backward(self, X: np.ndarray, outputs: np.ndarray, targets: np.ndarray) -> None:
@@ -76,6 +79,11 @@ class BinaryModel:
             f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
 
         self.grad = - (targets - outputs) * X
+
+        # mini-batch gradient descent
+        self.grad = (1/len(self.grad)) * np.sum(self.grad, axis=0)
+
+
 
     def zero_grad(self) -> None:
         self.grad = None
@@ -101,10 +109,10 @@ def gradient_approximation_test(model: BinaryModel, X: np.ndarray, Y: np.ndarray
         # Actual gradient
         logits = model.forward(X)
         model.backward(X, logits, Y)
-        difference = gradient_approximation - model.grad[i, 0]
+        difference = gradient_approximation - model.grad[i]
         assert abs(difference) <= epsilon**2,\
             f"Calculated gradient is incorrect. " \
-            f"Approximation: {gradient_approximation}, actual gradient: {model.grad[i, 0]}\n" \
+            f"Approximation: {gradient_approximation}, actual gradient: {model.grad[i]}\n" \
             f"If this test fails there could be errors in your cross entropy loss function, " \
             f"forward function or backward function"
 
@@ -117,7 +125,7 @@ if __name__ == "__main__":
         f"Expected X_train to have 785 elements per image. Shape was: {X_train.shape}"
 
     # Simple test for forward pass. Note that this does not cover all errors!
-    model = BinaryModel(0.0)
+    model = BinaryModel(0.0, X_train.shape[1])
     logits = model.forward(X_train)
     np.testing.assert_almost_equal(
         logits.mean(), .5,
