@@ -82,7 +82,7 @@ class BinaryModel:
 
         # mini-batch gradient descent
         self.grad = (1/len(self.grad)) * np.sum(self.grad, axis=0)
-
+        self.grad = self.grad.reshape((self.grad.shape[0],1))
 
 
     def zero_grad(self) -> None:
@@ -109,10 +109,10 @@ def gradient_approximation_test(model: BinaryModel, X: np.ndarray, Y: np.ndarray
         # Actual gradient
         logits = model.forward(X)
         model.backward(X, logits, Y)
-        difference = gradient_approximation - model.grad[i]
+        difference = gradient_approximation - model.grad[i,0]
         assert abs(difference) <= epsilon**2,\
             f"Calculated gradient is incorrect. " \
-            f"Approximation: {gradient_approximation}, actual gradient: {model.grad[i]}\n" \
+            f"Approximation: {gradient_approximation}, actual gradient: {model.grad[i,0]}\n" \
             f"If this test fails there could be errors in your cross entropy loss function, " \
             f"forward function or backward function"
 
