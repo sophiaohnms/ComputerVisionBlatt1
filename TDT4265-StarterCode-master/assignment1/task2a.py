@@ -2,7 +2,6 @@ import numpy as np
 import utils
 np.random.seed(1)
 
-
 def pre_process_images(X: np.ndarray):
     """
     Args:
@@ -82,7 +81,12 @@ class BinaryModel:
 
         # mini-batch gradient descent
         self.grad = (1/len(self.grad)) * np.sum(self.grad, axis=0)
-        self.grad = self.grad.reshape((self.grad.shape[0],1))
+        self.grad = self.grad.reshape((self.grad.shape[0],1)) # to make it to a column vector
+        self.grad += 2 * self.l2_reg_lambda * self.w # regularization
+
+
+
+
 
 
     def zero_grad(self) -> None:
