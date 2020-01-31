@@ -19,15 +19,21 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray)-> float:
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
     ce = targets * np.log(outputs)
 
+    L = -np.mean(targets* np.log(outputs))
 
-    sum=0
-    for i in range (0,len(outputs)):
-        for j in range (0,9):
-            sum+= targets* np.log(outputs)*(1/10)
+
+   # cost = - np.sum(targets * np.log(outputs))
+    #cost = cost
+    #return cost / targets.shape[1]  # average cost
+
+    #sum=0
+    #for i in range (0,len(outputs)):
+        #for j in range (0,9):
+            #sum+= targets* np.log(outputs)*(1/10)
 
     #C = - (1 / (len(outputs)* 10)) * np.sum(targets * np.log(outputs) )
 
-    return sum
+    return L
 
 
 class SoftmaxModel:
@@ -50,9 +56,10 @@ class SoftmaxModel:
         Returns:
             y: output of model with shape [batch size, num_outputs]
         """
-        z = X.dot(self.w)
+        Z = X.dot(self.w)
 
-        y = np.exp(z)/np.sum(np.exp(z), axis=1)
+        y = np.exp(Z) / np.sum(np.exp(Z), axis=1,keepdims=True)
+
 
         return y
 
@@ -70,11 +77,16 @@ class SoftmaxModel:
         assert self.grad.shape == self.w.shape,\
              f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
 
-        self.grad = - (1/10)* X * (targets - outputs)
 
-        # mini-batch gradient descent
-        self.grad = (1 / len(self.grad)) * np.sum(self.grad, axis=0)
-        self.grad = self.grad.reshape((self.grad.shape[0], 1))
+
+
+
+        self.grad = - (1/10)*np.dot(np.transpose(X),(targets-outputs))
+
+        self.grad=self.grad/X.shape[0]
+
+
+
 
     def zero_grad(self) -> None:
         self.grad = None
@@ -92,8 +104,11 @@ def one_hot_encode(Y: np.ndarray, num_classes: int):
 
     #raise NotImplementedError
 
-    Y= to_categorical(Y, num_classes)
-    return Y
+
+    Y_encoded = np.zeros((Y.shape[0],num_classes))
+    Y_encoded[range(len(Y)),Y.squeeze()]=1
+
+    return Y_encoded
 
 
 
