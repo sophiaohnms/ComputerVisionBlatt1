@@ -17,23 +17,18 @@ def calculate_accuracy(X: np.ndarray, targets: np.ndarray, model: SoftmaxModel) 
     """
 
     output = model.forward(X)
-    #output = np.amax(output,1)
-    #print('output', output)
-
-
 
     result_output = np.argmax(output, axis=1)
     target=np.argmax(targets, axis=1)
 
-    #num_correct = len(np.where(result_output == ind_target))
+
     correct = target==result_output
 
 
     accuracy = np.mean(correct)
 
 
-    #accuracy = num_correct / len(output)
-    #accuracy = 0
+
     return accuracy
 
 
@@ -136,17 +131,16 @@ print("Final Test accuracy:", calculate_accuracy(X_test, Y_test, model))
 
 
 # Plot loss
-#plt.ylim([0.01, .2])
+plt.ylim([0.01, .2])
 utils.plot_loss(train_loss, "Training Loss")
 utils.plot_loss(val_loss, "Validation Loss")
-plt.ylim([0.01, 0.2])
 plt.legend()
 plt.savefig("softmax_train_loss.png")
 plt.show()
 
 
 # Plot accuracy
-#plt.ylim([0.8, .95])
+plt.ylim([0.8, .95])
 utils.plot_loss(train_accuracy, "Training Accuracy")
 utils.plot_loss(val_accuracy, "Validation Accuracy")
 plt.legend()
